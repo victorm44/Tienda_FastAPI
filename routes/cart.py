@@ -1,4 +1,10 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
+from typing import Dict
+from models.Product import Product
+from app.price_calculator_engine import calculate_product_price
+from database.database import app
+from typing import Dict, List
+
 
 router = APIRouter()
 
@@ -9,7 +15,7 @@ class ShoppingCart:
         self.cart = {}
 
     def add_item(self, product_sku, quantity):
-        # Agrega un producto al carrito
+        # Agregar un producto al carrito
         if product_sku in self.cart:
             # Si el producto ya está en el carrito, aumenta la cantidad
             self.cart[product_sku] += quantity
@@ -23,18 +29,14 @@ class ShoppingCart:
             # Si el producto está en el carrito, elimínalo
             del self.cart[product_sku]
 
-    def calculate_total(self, product_catalog):
+    def calculate_total(self, product_catalog: Dict[str, Product]):
         # Calcula el total de la compra en el carrito
         total = 0
         for product_sku, quantity in self.cart.items():
             if product_sku in product_catalog:
                 product = product_catalog[product_sku]
-                total += self.calculate_product_price(product, quantity)  # Usar el método de cálculo de precio de la instancia
+                total += calculate_product_price(product, quantity)  # Usar el método de cálculo de precio de la instancia
         return total
-
-    def calculate_product_price(self, product, quantity):
-        # Implementa la lógica de cálculo de precio aquí
-        pass
 
 # Crea una instancia del carrito de compras
 shopping_cart = ShoppingCart()
@@ -53,6 +55,20 @@ def remove_from_cart(product_sku: str):
 
 # Define una ruta para calcular el total de la compra en el carrito
 @router.get("/calculate_cart_total")
-def calculate_cart_total(product_catalog):
-    total = shopping_cart.calculate_total(product_catalog)
+def calculate_cart_total(product_catalog: Dict[str, Product]):
+    total = shopping_cart.calculate_total(product_catalog)  # Calcula el total usando el catálogo de productos
     return {"total": total}
+
+# Esta función obtendrá todos los productos desde la base de datos
+async def get_all_products():
+    db = app.state.db
+    products_collection = db["productos"]
+    products_data = await products_collection.find({}).to_list(length=None)
+    products = [Product(**product) for product in products_data]
+    return products
+
+# Define una ruta para obtener todos los productos
+@router.get("/get_all_products", response_model=List[Product])
+async def get_all_products_route():
+    products = await get_all_products()
+    return products

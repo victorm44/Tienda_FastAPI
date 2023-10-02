@@ -6,7 +6,7 @@ app = FastAPI()
 
 MONGODB_URL = "mongodb+srv://victor:vic123456@cluster0.cu54xkq.mongodb.net/?retryWrites=true&w=majority"  # Cambia la URL según tu configuración
 client = AsyncIOMotorClient(MONGODB_URL)
-db = client.my_database  # Cambia "my_database" al nombre de tu base de datos
+db = client.productos  # Cambia "my_database" al nombre de tu base de datos
 
 def init_db():
     # Inicializar la conexión a la base de datos al arrancar la aplicación

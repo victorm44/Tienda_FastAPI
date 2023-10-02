@@ -6,4 +6,4 @@ class Product(BaseModel):
     description: str
     available_units: int
     unit_price: float
-
+    img: str

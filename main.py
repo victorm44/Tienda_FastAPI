@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routes import product, cart
+from routes import cart
 from database.database import init_db, close_db
 from routes import test
 from app.price_calculator_engine import calculate_product_price
@@ -24,5 +24,4 @@ app.add_middleware(
 
 # Agregar rutas desde módulos de enrutador
 app.include_router(test.router)
-app.include_router(product.router)
 app.include_router(cart.router)
