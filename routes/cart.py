@@ -1,30 +1,58 @@
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse
-from database.database import app
-from models.Product import Product
-
-
-from app.shoppingCart import ShoppingCart
-
+from fastapi import APIRouter, HTTPException
 
 router = APIRouter()
 
-# Crear una instancia de ShoppingCart
+# Define la estructura del carrito de compras
+class ShoppingCart:
+    def __init__(self):
+        # Inicializa el carrito de compras como un diccionario donde la clave es el SKU del producto y el valor es la cantidad
+        self.cart = {}
+
+    def add_item(self, product_sku, quantity):
+        # Agrega un producto al carrito
+        if product_sku in self.cart:
+            # Si el producto ya está en el carrito, aumenta la cantidad
+            self.cart[product_sku] += quantity
+        else:
+            # Si el producto no está en el carrito, agrégalo con la cantidad especificada
+            self.cart[product_sku] = quantity
+
+    def remove_item(self, product_sku):
+        # Elimina un producto del carrito
+        if product_sku in self.cart:
+            # Si el producto está en el carrito, elimínalo
+            del self.cart[product_sku]
+
+    def calculate_total(self, product_catalog):
+        # Calcula el total de la compra en el carrito
+        total = 0
+        for product_sku, quantity in self.cart.items():
+            if product_sku in product_catalog:
+                product = product_catalog[product_sku]
+                total += self.calculate_product_price(product, quantity)  # Usar el método de cálculo de precio de la instancia
+        return total
+
+    def calculate_product_price(self, product, quantity):
+        # Implementa la lógica de cálculo de precio aquí
+        pass
+
+# Crea una instancia del carrito de compras
 shopping_cart = ShoppingCart()
 
-@router.post("/add_to_cart/{product_sku}/{quantity}")
+# Define una ruta para agregar un producto al carrito
+@router.post("/add_to_cart")
 def add_to_cart(product_sku: str, quantity: int):
     shopping_cart.add_item(product_sku, quantity)
-    return {"message": f"{quantity} unidades de {product_sku} agregadas al carrito"}
+    return {"message": "Producto agregado al carrito"}
 
-@router.delete("/remove_from_cart/{product_sku}")
+# Define una ruta para eliminar un producto del carrito
+@router.post("/remove_from_cart")
 def remove_from_cart(product_sku: str):
     shopping_cart.remove_item(product_sku)
-    return {"message": f"{product_sku} eliminado del carrito"}
+    return {"message": "Producto eliminado del carrito"}
 
-@router.get("/cart_total")
-def get_cart_total():
-    total = shopping_cart.calculate_total()
+# Define una ruta para calcular el total de la compra en el carrito
+@router.get("/calculate_cart_total")
+def calculate_cart_total(product_catalog):
+    total = shopping_cart.calculate_total(product_catalog)
     return {"total": total}
-
